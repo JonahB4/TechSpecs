@@ -1,5 +1,9 @@
 # Bit Life Simulator - Technical Specification
 
+## Link to Figma Sheet
+[BitLife Simulation Figma Sheet](https://www.figma.com/board/ux830q1zYMQlJXrDImceM6/BitLife-Simulation-Figma-Sheet?node-id=0-1)
+
+
 ## Technology Stack
 - **Frontend:** HTML, CSS, JavaScript (or TypeScript)
 - **Framework Options:** Phaser for interactive 2D scenes, or Vanilla JavaScript for simpler interface needs.
