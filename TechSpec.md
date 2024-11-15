@@ -3,7 +3,6 @@
 ## Link to Figma Sheet
 [BitLife Simulation Figma Sheet](https://www.figma.com/board/ux830q1zYMQlJXrDImceM6/BitLife-Simulation-Figma-Sheet?node-id=0-1)
 
-
 ## Technology Stack
 - **Frontend:** HTML, CSS, JavaScript (or TypeScript)
 - **Framework Options:** Phaser for interactive 2D scenes, or Vanilla JavaScript for simpler interface needs.
@@ -16,22 +15,24 @@
 ## Architecture
 
 ### 1. GameManager
-Manages the core flow of each turn, tracks player stats, and handles yearly actions and age progression.
+Manages the core flow of each turn, tracks player stats, and handles yearly actions, age progression, and various menus (e.g., Relationships, Pets, Career, etc.).
 
 #### Variables
 - `currentAge`: *int* - Current age of the character.
 - `isGameOver`: *boolean* - Indicates if the game has ended.
-- `characterStats`: *CharacterStats* - Instance of CharacterStats (nested) to store and update character life stats.
+- `characterStats`: *CharacterStats* - Instance of CharacterStats to store and update character life stats.
 - `lifeEvents`: *List<Event>* - History of events that have occurred.
 - `randomEventQueue`: *List<Event>* - Queue for unexpected life events triggered at random.
 - `choicesPerTurn`: *int* - Number of actions the player can take per turn.
+- `deathChance`: *float* - Probability of the character dying, which increases after age 70.
+- `children`: *List<CharacterStats>* - List of children the character has, allowing the game to continue after death.
 
 #### Methods
 - **startGame**
   - **Behavior:** Initializes a new game with a character at age 0, default stats, and an empty life event history.
 
 - **progressTurn**
-  - **Behavior:** Increases age by one year, triggers random events, allows player actions, and checks game-ending conditions.
+  - **Behavior:** Increases age by one year, triggers random events, allows player actions, checks for death conditions, and progresses to the next character if the current one dies.
 
 - **applyEvent**
   - **Input:** *Event event*
@@ -47,6 +48,15 @@ Manages the core flow of each turn, tracks player stats, and handles yearly acti
 - **saveGame**
   - **Behavior:** Saves current game state to local storage or database for later continuation.
 
+- **triggerRandomLifeEvent**
+  - **Behavior:** Randomly triggers a life event that requires the player to make a choice, with consequences for character stats.
+
+- **checkDeath**
+  - **Behavior:** Checks the character’s age and `deathChance` to determine if the character should die. If they do, offers the option to continue as one of their children.
+
+- **chooseNextCharacter**
+  - **Behavior:** If the current character dies and has children, allows the player to continue the game as one of the children.
+
 ---
 
 ### 2. CharacterStats
@@ -59,6 +69,9 @@ Tracks and updates all character-related stats, handles changes based on age, an
 - `wealth`: *float* - Total wealth, affected by career and financial decisions.
 - `relationships`: *Dict<String, int>* - Relationship strength with key family and friends.
 - `reputation`: *int* - Social reputation, affected by community actions.
+- `children`: *List<CharacterStats>* - List of children that the character has.
+- `career`: *Career* - Tracks the character’s current career status.
+- `pets`: *List<Pet>* - List of pets the character owns.
 
 #### Methods
 - **updateStats**
@@ -118,3 +131,58 @@ Represents player-selected actions in each turn and provides a variety of age-ap
 
 - **getEffectDescription**
   - **Output:** *String* - Returns a description of the effects of the action.
+
+---
+
+### 5. Pet
+Represents pets that the character can own, adding to happiness and companionship.
+
+#### Variables
+- `type`: *String* - Type of pet (e.g., "dog", "cat").
+- `age`: *int* - Age of the pet.
+- `health`: *float* - Health status of the pet.
+- `bondLevel`: *int* - Bond level with the character.
+
+#### Methods
+- **interact**
+  - **Behavior:** Increases happiness and bond level with the character.
+
+- **agePet**
+  - **Behavior:** Ages the pet, with health effects as it gets older.
+
+---
+
+### 6. Career
+Handles career options and progression for the character.
+
+#### Variables
+- `jobTitle`: *String* - Current job title.
+- `salary`: *float* - Current income from the job.
+- `jobSatisfaction`: *int* - Level of satisfaction in the job.
+
+#### Methods
+- **promote**
+  - **Behavior:** Increases salary and job satisfaction based on performance.
+
+- **quitJob**
+  - **Behavior:** Allows the player to leave the job, affecting wealth and happiness.
+
+- **changeCareer**
+  - **Behavior:** Allows the player to switch careers, resetting job title and satisfaction.
+
+---
+
+### 7. Relationship
+Tracks key relationships for the character, affecting happiness and social connections.
+
+#### Variables
+- `name`: *String* - Name of the relationship.
+- `relationType`: *String* - Type of relationship (e.g., "friend", "partner", "child").
+- `relationshipLevel`: *int* - Strength of the relationship.
+
+#### Methods
+- **interact**
+  - **Behavior:** Boosts relationship level based on interaction type.
+
+- **resolveConflict**
+  - **Behavior:** Manages conflicts, affecting relationship level and happiness.
