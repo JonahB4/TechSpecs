@@ -1,0 +1,83 @@
+<html>
+<head>
+    <title>Life Simulator</title>
+    <link rel="stylesheet" href="Style/styles.css">
+</head>
+<body>
+    <div class="game-container">
+        <div class="stats-panel">
+            <h1>BitLife Simulator</h1>
+
+            <div class="character-info">
+                <div id="age-display">Age: 0</div>
+
+                <div class="stats-grid">
+                    <div id="happiness-stat" class="stat-item">
+                        Happiness:
+                        <div class="progress-bar">
+                            <div class="progress" style="width: 50%"></div>
+                        </div>
+                        <span>50%</span>
+                    </div>
+
+                    <div id="health-stat" class="stat-item">
+                        Health:
+                        <div class="progress-bar">
+                            <div class="progress" style="width: 100%"></div>
+                        </div>
+                        <span>100%</span>
+                    </div>
+
+                    <div id="intelligence-stat" class="stat-item">
+                        Intelligence:
+                        <div class="progress-bar">
+                            <div class="progress" style="width: 50%"></div>
+                        </div>
+                        <span>50%</span>
+                    </div>
+
+                    <div id="wealth-stat" class="stat-item">
+                        Wealth: $0
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="event-panel" class="event-panel">
+            <h2>Life Events</h2>
+            <div id="game-log" class="game-log">
+                Welcome to BitLife Simulator!
+            </div>
+        </div>
+
+        <div class="game-controls">
+            <button id="start-game-btn">Start New Life</button>
+            <button id="progress-turn-btn" disabled>Age Up</button>
+        </div>
+
+        <div id="death-modal" class="modal">
+            <div class="modal-content">
+                <h2>Game Over</h2>
+                <button onclick="document.getElementById('death-modal').style.display='none'">
+                    Start New Life
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="Scripts/Action.js"></script>
+    <script src="Scripts/ActionManager.js"></script>
+    <script src="Scripts/Career.js"></script>
+    <script src="Scripts/CharacterStats.js"></script>
+    <script src="Scripts/Event.js"></script>
+    <script src="Scripts/EventManager.js"></script>
+    <script src="Scripts/GameManager.js"></script>
+    <script src="Scripts/main.js"></script>
+    <script src="Scripts/Pet.js"></script>
+    <script src="Scripts/PetManager.js"></script>
+    <script src="Scripts/Relationship.js"></script>
+    <script src="Scripts/RelationshipManager.js"></script>
+    <script src="Scripts/UIManager.js"></script>
+    <script src="Scripts/Utils.js"></script>
+</body>
+</html>
