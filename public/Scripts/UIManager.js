@@ -57,8 +57,8 @@ class UIManager {
             }
 
             // Move elements to top section
-            topSection.appendChild(gameControls.cloneNode(true));
             topSection.appendChild(gameLog.cloneNode(true));
+            topSection.appendChild(gameControls.cloneNode(true));
 
             // Create bottom content
             const bottomContent = document.createElement('div');
@@ -84,24 +84,35 @@ class UIManager {
 
     setupActionButtons() {
         try {
-            const topSection = document.querySelector('.top-section');
-            if (!topSection) return;
-
-            const actionContainer = document.createElement('div');
+            const bottomContent = document.querySelector('.bottom-content');
+            if (!bottomContent) {
+                console.error('Bottom content section not found');
+                return;
+            }
+    
+            // Clear existing action container if it exists
+            let actionContainer = document.getElementById('action-container');
+            if (actionContainer) {
+                actionContainer.remove();
+            }
+    
+            actionContainer = document.createElement('div');
             actionContainer.id = 'action-container';
             actionContainer.className = 'action-container';
-            
+    
             Object.entries(ActionManager.actions).forEach(([actionName, action]) => {
                 const button = document.createElement('button');
                 button.textContent = this.formatActionName(actionName);
                 button.className = 'action-button';
                 button.dataset.actionName = actionName;
-                
+    
+                // Hide buttons if character's age is out of range
                 if (this.GameManager.characterStats.age < action.minAge || 
                     this.GameManager.characterStats.age > action.maxAge) {
                     button.style.display = 'none';
                 }
-                
+    
+                // Add click listener for the action
                 button.addEventListener('click', () => {
                     if (!action.isAvailable(this.GameManager.characterStats)) {
                         console.error('Action not available');
@@ -118,17 +129,17 @@ class UIManager {
                         console.error(e.message);
                     }
                 });
+    
                 actionContainer.appendChild(button);
             });
-
-            const gameLog = document.getElementById('game-log');
-            if (gameLog && gameLog.parentElement) {
-                gameLog.parentElement.insertBefore(actionContainer, gameLog);
-            }
+    
+            // Append the action container to the bottom content
+            bottomContent.appendChild(actionContainer);
         } catch (error) {
             console.error('Error in setupActionButtons:', error);
         }
     }
+    
 
     formatActionName(name) {
         return name.charAt(0).toUpperCase() + name.slice(1).replace(/([A-Z])/g, ' $1');
@@ -223,9 +234,32 @@ class UIManager {
     }
 
     updateRelationshipsDisplay() {
-        const relationshipsDiv = this.getOrCreateSection('relationships-section', 'Relationships');
-        relationshipsDiv.innerHTML = '';
-
+        // First, get the bottom content section
+        const bottomContent = document.querySelector('.bottom-content');
+        if (!bottomContent) {
+            console.error('Bottom content section not found');
+            return;
+        }
+    
+        // Check if relationships section already exists
+        let relationshipsDiv = document.getElementById('relationships-section');
+        if (!relationshipsDiv) {
+            relationshipsDiv = document.createElement('div');
+            relationshipsDiv.id = 'relationships-section';
+            relationshipsDiv.className = 'section relationships-section';
+            
+            // Create a title for the section
+            const title = document.createElement('h2');
+            title.textContent = 'Relationships';
+            relationshipsDiv.appendChild(title);
+            
+            // Append to bottom content
+            bottomContent.appendChild(relationshipsDiv);
+        } else {
+            // Clear existing content
+            relationshipsDiv.innerHTML = '<h2>Relationships</h2>';
+        }
+    
         this.GameManager.relationshipManager.getAllRelationships().forEach(relationship => {
             const relationshipElement = document.createElement('div');
             relationshipElement.className = 'relationship-item';
@@ -242,7 +276,7 @@ class UIManager {
                     <button>Talk</button>
                 </div>
             `;
-
+    
             // Add event listeners properly
             const buttons = relationshipElement.querySelectorAll('button');
             buttons[0].addEventListener('click', () => {
@@ -251,7 +285,7 @@ class UIManager {
             buttons[1].addEventListener('click', () => {
                 this.GameManager.interactWithRelationship(relationship.name, 'Deep conversation');
             });
-
+    
             relationshipsDiv.appendChild(relationshipElement);
         });
     }
