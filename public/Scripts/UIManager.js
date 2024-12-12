@@ -149,6 +149,7 @@ class UIManager {
         try {
             const startBtn = document.getElementById('start-game-btn');
             const progressBtn = document.getElementById('progress-turn-btn');
+            const adoptPetBtn = document.getElementById('adopt-pet-btn');
             
             if (startBtn && progressBtn) {
                 // Remove existing listeners if any
@@ -163,14 +164,81 @@ class UIManager {
                     this.GameManager.progressTurn();
                     this.updateActionVisibility(true);
                     this.updateActionButtons();
+                    this.updatePetsDisplay(); // Add this line to update pets on turn progression
                 });
                 
                 this.startButton = newStartBtn;
                 this.progressButton = newProgressBtn;
             }
+    
+            // Add event listener for adopt pet button
+            if (adoptPetBtn) {
+                adoptPetBtn.addEventListener('click', () => this.openPetAdoptionModal());
+            }
         } catch (error) {
             console.error('Error in setupEventListeners:', error);
         }
+    }
+    
+    openPetAdoptionModal() {
+        console.log('Open Pet Adoption Modal called');
+        
+        // Create a simple modal for pet adoption
+        const modal = document.createElement('div');
+        modal.className = 'modal';
+        modal.id = 'pet-adoption-modal';  // Add an ID for easier debugging
+        modal.innerHTML = `
+            <div class="modal-content">
+                <h2>Adopt a Pet</h2>
+                <select id="pet-type">
+                    <option value="dog">Dog</option>
+                    <option value="cat">Cat</option>
+                    <option value="bird">Bird</option>
+                </select>
+                <input type="text" id="pet-name" placeholder="Enter pet name">
+                <button id="confirm-adopt">Adopt</button>
+                <button id="cancel-adopt">Cancel</button>
+            </div>
+        `;
+        modal.style.display = 'flex';  // Ensure it's visible
+        modal.style.position = 'fixed';
+        modal.style.top = '0';
+        modal.style.left = '0';
+        modal.style.width = '100%';
+        modal.style.height = '100%';
+        modal.style.backgroundColor = 'rgba(0,0,0,0.5)';
+        modal.style.justifyContent = 'center';
+        modal.style.alignItems = 'center';
+    
+        document.body.appendChild(modal);
+    
+        const confirmBtn = modal.querySelector('#confirm-adopt');
+        const cancelBtn = modal.querySelector('#cancel-adopt');
+        const petTypeSelect = modal.querySelector('#pet-type');
+        const petNameInput = modal.querySelector('#pet-name');
+    
+        confirmBtn.addEventListener('click', () => {
+            console.log('Confirm adopt clicked');
+            const petType = petTypeSelect.value;
+            const petName = petNameInput.value;
+    
+            if (petName.trim()) {
+                console.log(`Adopting pet: ${petName} (${petType})`);
+                this.GameManager.adoptPet({
+                    name: petName,
+                    type: petType
+                });
+                document.body.removeChild(modal);
+                this.updatePetsDisplay();
+            } else {
+                alert('Please enter a name for your pet');
+            }
+        });
+    
+        cancelBtn.addEventListener('click', () => {
+            console.log('Cancel adopt clicked');
+            document.body.removeChild(modal);
+        });
     }
 
     updateGameLog(message) {
@@ -273,7 +341,9 @@ class UIManager {
                 </div>
                 <div class="relationship-actions">
                     <button>Hang out</button>
-                    <button>Talk</button>
+                    <button>Deep conversation</button>
+                    <button>Go on vacation</button>
+                    <button>Have an argument</button>
                 </div>
             `;
     
@@ -285,16 +355,66 @@ class UIManager {
             buttons[1].addEventListener('click', () => {
                 this.GameManager.interactWithRelationship(relationship.name, 'Deep conversation');
             });
+            buttons[2].addEventListener('click', () => {
+                this.GameManager.interactWithRelationship(relationship.name, 'Go on vacation');
+            });
+            buttons[3].addEventListener('click', () => {
+                this.GameManager.interactWithRelationship(relationship.name, 'Have an argument');
+            });
     
             relationshipsDiv.appendChild(relationshipElement);
         });
     }
 
     updatePetsDisplay() {
-        const petsDiv = this.getOrCreateSection('pets-section', 'Pets');
-        petsDiv.innerHTML = '';
-
-        this.GameManager.petManager.getAllPets().forEach(pet => {
+        // First, get the bottom content section
+        const bottomContent = document.querySelector('.bottom-content');
+        if (!bottomContent) {
+            console.error('Bottom content section not found');
+            return;
+        }
+    
+        // Check if pets section already exists
+        let petsDiv = document.getElementById('pets-section');
+        if (!petsDiv) {
+            petsDiv = document.createElement('div');
+            petsDiv.id = 'pets-section';
+            petsDiv.className = 'section pets-section';
+            
+            // Create a title for the section
+            const title = document.createElement('h2');
+            title.textContent = 'Pets';
+            petsDiv.appendChild(title);
+            
+            // Add an "Adopt Pet" button
+            const adoptPetButton = document.createElement('button');
+            adoptPetButton.textContent = 'Adopt Pet';
+            adoptPetButton.className = 'adopt-pet-button';
+            adoptPetButton.addEventListener('click', () => this.openPetAdoptionModal());
+            petsDiv.appendChild(adoptPetButton);
+            
+            // Append to bottom content
+            bottomContent.appendChild(petsDiv);
+        } else {
+            // Clear existing content
+            petsDiv.innerHTML = '<h2>Pets</h2>';
+            
+            // Re-add the adopt pet button
+            const adoptPetButton = document.createElement('button');
+            adoptPetButton.textContent = 'Adopt Pet';
+            adoptPetButton.className = 'adopt-pet-button';
+            adoptPetButton.addEventListener('click', () => this.openPetAdoptionModal());
+            petsDiv.appendChild(adoptPetButton);
+        }
+    
+        // Get pets from the game manager
+        const pets = this.GameManager.petManager.getAllPets();
+    
+        if (pets.length === 0) {
+            return;
+        }
+    
+        pets.forEach(pet => {
             const petElement = document.createElement('div');
             petElement.className = 'pet-item';
             petElement.innerHTML = `
@@ -308,6 +428,12 @@ class UIManager {
                             </div>
                         </div>
                         <div class="stat">
+                            <span>Happiness: ${pet.happiness}%</span>
+                            <div class="progress-bar">
+                                <div class="progress" style="width: ${pet.happiness}%"></div>
+                            </div>
+                        </div>
+                        <div class="stat">
                             <span>Bond: ${pet.bondLevel}%</span>
                             <div class="progress-bar">
                                 <div class="progress" style="width: ${pet.bondLevel}%"></div>
@@ -316,11 +442,24 @@ class UIManager {
                     </div>
                 </div>
                 <div class="pet-actions">
-                    <button onclick="GameManager.interactWithPet('${pet.name}', 'Play')">Play</button>
-                    <button onclick="GameManager.interactWithPet('${pet.name}', 'Feed')">Feed</button>
-                    <button onclick="GameManager.interactWithPet('${pet.name}', 'Vet visit')">Vet Visit</button>
+                    <button>Play</button>
+                    <button>Feed</button>
+                    <button>Vet Visit</button>
                 </div>
             `;
+    
+            // Add event listeners for pet actions
+            const buttons = petElement.querySelectorAll('button');
+            buttons[0].addEventListener('click', () => {
+                this.GameManager.interactWithPet(pet.name, 'Play');
+            });
+            buttons[1].addEventListener('click', () => {
+                this.GameManager.interactWithPet(pet.name, 'Feed');
+            });
+            buttons[2].addEventListener('click', () => {
+                this.GameManager.interactWithPet(pet.name, 'Vet visit');
+            });
+    
             petsDiv.appendChild(petElement);
         });
     }
