@@ -3,6 +3,10 @@ class PetManager {
         this.pets = new Map();
     }
 
+    getAllPets() {
+        return Array.from(this.pets.values());
+    }
+
     addPet(config) {
         if (this.pets.size >= 3) {
             throw new Error("You can't have more than 3 pets!");

@@ -41,7 +41,7 @@ class Pet {
         this.happiness = Math.min(100, this.happiness + effect.happiness);
         this.health = Math.min(100, this.health + effect.health);
 
-        return `You ${action.toLowerCase()} with ${this.name}`;
+        return {message: `You ${action.toLowerCase()} with ${this.name}`, effects: effect};
     }
 
     agePet() {
