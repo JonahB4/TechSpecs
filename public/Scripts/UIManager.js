@@ -18,7 +18,6 @@ class UIManager {
             console.error('Error initializing UI:', error);
         }
     }
-
     reorganizeLayout() {
         try {
             // Get the game container first
@@ -27,92 +26,85 @@ class UIManager {
                 console.error('Game container not found');
                 return;
             }
-
-            // Store the stats panel and death modal
+    
+            // Store all the necessary elements
             const statsPanel = gameContainer.querySelector('.stats-panel');
             const deathModal = gameContainer.querySelector('#death-modal');
-
-            // Create main content container
-            const mainContent = document.createElement('div');
-            mainContent.className = 'main-content';
-
-            // Create top section for game log
-            const topSection = document.createElement('div');
-            topSection.className = 'top-section';
-
-            // Get existing elements
-            const gameControls = gameContainer.querySelector('.game-controls');
             const eventPanel = gameContainer.querySelector('#event-panel');
             const gameLog = gameContainer.querySelector('#game-log');
-
-            if (!gameControls || !eventPanel || !gameLog) {
-                console.error('Required elements not found');
-                return;
-            }
-
-            // Clear the event panel title if it exists
-            const eventPanelTitle = eventPanel.querySelector('h2');
-            if (eventPanelTitle) {
-                eventPanelTitle.remove();
-            }
-
-            // Move elements to top section
-            topSection.appendChild(gameLog.cloneNode(true));
-            topSection.appendChild(gameControls.cloneNode(true));
-
-            // Create bottom content
-            const bottomContent = document.createElement('div');
-            bottomContent.className = 'bottom-content';
-
+            
+            // Find all control buttons and create a new game-controls container
+            const newGameControls = document.createElement('div');
+            newGameControls.className = 'game-controls';
+            
+            // Add the Start New Life button
+            const startButton = document.createElement('button');
+            startButton.id = 'start-game-btn';
+            startButton.textContent = 'Start New Life';
+            newGameControls.appendChild(startButton);
+            
+            // Add the Age Up button
+            const ageUpButton = document.createElement('button');
+            ageUpButton.id = 'progress-turn-btn';
+            ageUpButton.textContent = 'Age Up';
+            newGameControls.appendChild(ageUpButton);
+    
             // Clear the game container
             gameContainer.innerHTML = '';
-
-            // Rebuild the structure
+    
+            // Rebuild the structure in the desired order
+            // 1. Stats Panel
             if (statsPanel) gameContainer.appendChild(statsPanel);
-            mainContent.appendChild(topSection);
-            mainContent.appendChild(bottomContent);
+    
+            // 2. Game Controls - now containing both buttons
+            gameContainer.appendChild(newGameControls);
+    
+            // 3. Main Content
+            const mainContent = document.createElement('div');
+            mainContent.className = 'main-content';
+    
+            // 4. Event Panel with Game Log
+            const newEventPanel = document.createElement('div');
+            newEventPanel.id = 'event-panel';
+            newEventPanel.className = 'event-panel';
+            if (gameLog) newEventPanel.appendChild(gameLog);
+            mainContent.appendChild(newEventPanel);
+    
+            // Add main content to container
             gameContainer.appendChild(mainContent);
+    
+            // 5. Death Modal
             if (deathModal) gameContainer.appendChild(deathModal);
-
-            // Re-setup event listeners since we cloned nodes
+    
+            // Re-setup event listeners since we created new buttons
             this.setupEventListeners();
             this.setupActionButtons();
         } catch (error) {
             console.error('Error in reorganizeLayout:', error);
         }
-    }
+    }c
+
 
     setupActionButtons() {
         try {
-            const bottomContent = document.querySelector('.bottom-content');
-            if (!bottomContent) {
-                console.error('Bottom content section not found');
-                return;
-            }
-    
-            // Clear existing action container if it exists
-            let actionContainer = document.getElementById('action-container');
-            if (actionContainer) {
-                actionContainer.remove();
-            }
-    
-            actionContainer = document.createElement('div');
+            const topSection = document.querySelector('.top-section');
+            if (!topSection) return;
+
+            const actionContainer = document.createElement('div');
             actionContainer.id = 'action-container';
             actionContainer.className = 'action-container';
-    
+            
             Object.entries(ActionManager.actions).forEach(([actionName, action]) => {
                 const button = document.createElement('button');
                 button.textContent = this.formatActionName(actionName);
                 button.className = 'action-button';
                 button.dataset.actionName = actionName;
-    
-                // Hide buttons if character's age is out of range
+                
                 if (this.GameManager.characterStats.age < action.minAge || 
                     this.GameManager.characterStats.age > action.maxAge) {
                     button.style.display = 'none';
                 }
-    
-                // Add click listener for the action
+                
                 button.addEventListener('click', () => {
                     if (!action.isAvailable(this.GameManager.characterStats)) {
                         console.error('Action not available');
@@ -129,17 +121,17 @@ class UIManager {
                         console.error(e.message);
                     }
                 });
-    
                 actionContainer.appendChild(button);
             });
-    
-            // Append the action container to the bottom content
-            bottomContent.appendChild(actionContainer);
+
+            const gameLog = document.getElementById('game-log');
+            if (gameLog && gameLog.parentElement) {
+                gameLog.parentElement.insertBefore(actionContainer, gameLog);
+            }
         } catch (error) {
             console.error('Error in setupActionButtons:', error);
         }
     }
-    
 
     formatActionName(name) {
         return name.charAt(0).toUpperCase() + name.slice(1).replace(/([A-Z])/g, ' $1');
@@ -149,7 +141,6 @@ class UIManager {
         try {
             const startBtn = document.getElementById('start-game-btn');
             const progressBtn = document.getElementById('progress-turn-btn');
-            const adoptPetBtn = document.getElementById('adopt-pet-btn');
             
             if (startBtn && progressBtn) {
                 // Remove existing listeners if any
@@ -164,81 +155,14 @@ class UIManager {
                     this.GameManager.progressTurn();
                     this.updateActionVisibility(true);
                     this.updateActionButtons();
-                    this.updatePetsDisplay(); // Add this line to update pets on turn progression
                 });
                 
                 this.startButton = newStartBtn;
                 this.progressButton = newProgressBtn;
             }
-    
-            // Add event listener for adopt pet button
-            if (adoptPetBtn) {
-                adoptPetBtn.addEventListener('click', () => this.openPetAdoptionModal());
-            }
         } catch (error) {
             console.error('Error in setupEventListeners:', error);
         }
-    }
-    
-    openPetAdoptionModal() {
-        console.log('Open Pet Adoption Modal called');
-        
-        // Create a simple modal for pet adoption
-        const modal = document.createElement('div');
-        modal.className = 'modal';
-        modal.id = 'pet-adoption-modal';  // Add an ID for easier debugging
-        modal.innerHTML = `
-            <div class="modal-content">
-                <h2>Adopt a Pet</h2>
-                <select id="pet-type">
-                    <option value="dog">Dog</option>
-                    <option value="cat">Cat</option>
-                    <option value="bird">Bird</option>
-                </select>
-                <input type="text" id="pet-name" placeholder="Enter pet name">
-                <button id="confirm-adopt">Adopt</button>
-                <button id="cancel-adopt">Cancel</button>
-            </div>
-        `;
-        modal.style.display = 'flex';  // Ensure it's visible
-        modal.style.position = 'fixed';
-        modal.style.top = '0';
-        modal.style.left = '0';
-        modal.style.width = '100%';
-        modal.style.height = '100%';
-        modal.style.backgroundColor = 'rgba(0,0,0,0.5)';
-        modal.style.justifyContent = 'center';
-        modal.style.alignItems = 'center';
-    
-        document.body.appendChild(modal);
-    
-        const confirmBtn = modal.querySelector('#confirm-adopt');
-        const cancelBtn = modal.querySelector('#cancel-adopt');
-        const petTypeSelect = modal.querySelector('#pet-type');
-        const petNameInput = modal.querySelector('#pet-name');
-    
-        confirmBtn.addEventListener('click', () => {
-            console.log('Confirm adopt clicked');
-            const petType = petTypeSelect.value;
-            const petName = petNameInput.value;
-    
-            if (petName.trim()) {
-                console.log(`Adopting pet: ${petName} (${petType})`);
-                this.GameManager.adoptPet({
-                    name: petName,
-                    type: petType
-                });
-                document.body.removeChild(modal);
-                this.updatePetsDisplay();
-            } else {
-                alert('Please enter a name for your pet');
-            }
-        });
-    
-        cancelBtn.addEventListener('click', () => {
-            console.log('Cancel adopt clicked');
-            document.body.removeChild(modal);
-        });
     }
 
     updateGameLog(message) {
@@ -302,32 +226,9 @@ class UIManager {
     }
 
     updateRelationshipsDisplay() {
-        // First, get the bottom content section
-        const bottomContent = document.querySelector('.bottom-content');
-        if (!bottomContent) {
-            console.error('Bottom content section not found');
-            return;
-        }
-    
-        // Check if relationships section already exists
-        let relationshipsDiv = document.getElementById('relationships-section');
-        if (!relationshipsDiv) {
-            relationshipsDiv = document.createElement('div');
-            relationshipsDiv.id = 'relationships-section';
-            relationshipsDiv.className = 'section relationships-section';
-            
-            // Create a title for the section
-            const title = document.createElement('h2');
-            title.textContent = 'Relationships';
-            relationshipsDiv.appendChild(title);
-            
-            // Append to bottom content
-            bottomContent.appendChild(relationshipsDiv);
-        } else {
-            // Clear existing content
-            relationshipsDiv.innerHTML = '<h2>Relationships</h2>';
-        }
-    
+        const relationshipsDiv = this.getOrCreateSection('relationships-section', 'Relationships');
+        relationshipsDiv.innerHTML = '';
+
         this.GameManager.relationshipManager.getAllRelationships().forEach(relationship => {
             const relationshipElement = document.createElement('div');
             relationshipElement.className = 'relationship-item';
@@ -341,12 +242,10 @@ class UIManager {
                 </div>
                 <div class="relationship-actions">
                     <button>Hang out</button>
-                    <button>Deep conversation</button>
-                    <button>Go on vacation</button>
-                    <button>Have an argument</button>
+                    <button>Talk</button>
                 </div>
             `;
-    
+
             // Add event listeners properly
             const buttons = relationshipElement.querySelectorAll('button');
             buttons[0].addEventListener('click', () => {
@@ -355,66 +254,16 @@ class UIManager {
             buttons[1].addEventListener('click', () => {
                 this.GameManager.interactWithRelationship(relationship.name, 'Deep conversation');
             });
-            buttons[2].addEventListener('click', () => {
-                this.GameManager.interactWithRelationship(relationship.name, 'Go on vacation');
-            });
-            buttons[3].addEventListener('click', () => {
-                this.GameManager.interactWithRelationship(relationship.name, 'Have an argument');
-            });
-    
+
             relationshipsDiv.appendChild(relationshipElement);
         });
     }
 
     updatePetsDisplay() {
-        // First, get the bottom content section
-        const bottomContent = document.querySelector('.bottom-content');
-        if (!bottomContent) {
-            console.error('Bottom content section not found');
-            return;
-        }
-    
-        // Check if pets section already exists
-        let petsDiv = document.getElementById('pets-section');
-        if (!petsDiv) {
-            petsDiv = document.createElement('div');
-            petsDiv.id = 'pets-section';
-            petsDiv.className = 'section pets-section';
-            
-            // Create a title for the section
-            const title = document.createElement('h2');
-            title.textContent = 'Pets';
-            petsDiv.appendChild(title);
-            
-            // Add an "Adopt Pet" button
-            const adoptPetButton = document.createElement('button');
-            adoptPetButton.textContent = 'Adopt Pet';
-            adoptPetButton.className = 'adopt-pet-button';
-            adoptPetButton.addEventListener('click', () => this.openPetAdoptionModal());
-            petsDiv.appendChild(adoptPetButton);
-            
-            // Append to bottom content
-            bottomContent.appendChild(petsDiv);
-        } else {
-            // Clear existing content
-            petsDiv.innerHTML = '<h2>Pets</h2>';
-            
-            // Re-add the adopt pet button
-            const adoptPetButton = document.createElement('button');
-            adoptPetButton.textContent = 'Adopt Pet';
-            adoptPetButton.className = 'adopt-pet-button';
-            adoptPetButton.addEventListener('click', () => this.openPetAdoptionModal());
-            petsDiv.appendChild(adoptPetButton);
-        }
-    
-        // Get pets from the game manager
-        const pets = this.GameManager.petManager.getAllPets();
-    
-        if (pets.length === 0) {
-            return;
-        }
-    
-        pets.forEach(pet => {
+        const petsDiv = this.getOrCreateSection('pets-section', 'Pets');
+        petsDiv.innerHTML = '';
+
+        this.GameManager.petManager.getAllPets().forEach(pet => {
             const petElement = document.createElement('div');
             petElement.className = 'pet-item';
             petElement.innerHTML = `
@@ -428,12 +277,6 @@ class UIManager {
                             </div>
                         </div>
                         <div class="stat">
-                            <span>Happiness: ${pet.happiness}%</span>
-                            <div class="progress-bar">
-                                <div class="progress" style="width: ${pet.happiness}%"></div>
-                            </div>
-                        </div>
-                        <div class="stat">
                             <span>Bond: ${pet.bondLevel}%</span>
                             <div class="progress-bar">
                                 <div class="progress" style="width: ${pet.bondLevel}%"></div>
@@ -442,24 +285,11 @@ class UIManager {
                     </div>
                 </div>
                 <div class="pet-actions">
-                    <button>Play</button>
-                    <button>Feed</button>
-                    <button>Vet Visit</button>
+                    <button onclick="GameManager.interactWithPet('${pet.name}', 'Play')">Play</button>
+                    <button onclick="GameManager.interactWithPet('${pet.name}', 'Feed')">Feed</button>
+                    <button onclick="GameManager.interactWithPet('${pet.name}', 'Vet visit')">Vet Visit</button>
                 </div>
             `;
-    
-            // Add event listeners for pet actions
-            const buttons = petElement.querySelectorAll('button');
-            buttons[0].addEventListener('click', () => {
-                this.GameManager.interactWithPet(pet.name, 'Play');
-            });
-            buttons[1].addEventListener('click', () => {
-                this.GameManager.interactWithPet(pet.name, 'Feed');
-            });
-            buttons[2].addEventListener('click', () => {
-                this.GameManager.interactWithPet(pet.name, 'Vet visit');
-            });
-    
             petsDiv.appendChild(petElement);
         });
     }
