@@ -155,13 +155,13 @@ class GameManager {
         return this.petManager.addPet(config);
     }
 
-    interactWithPet(name, action) {
-        const pet = this.petManager.getPet(name);
-        if (!pet) return false;
-
-        const result = pet.interact(action);
-        this.characterStats.happiness += 5;
-        return result;
+    interactWithPet(petName, action) {
+        const pet = this.petManager.getPet(petName);
+        if (pet) {
+            const result = pet.interact(action);
+            this.uiManager.updateGameLog(result.message);
+            this.uiManager.updatePetsDisplay();
+        }
     }
     checkDeath() {
         const deathChance = Math.max(0, this.characterStats.age - 70) * 0.01; // 1% chance per year after age 70
