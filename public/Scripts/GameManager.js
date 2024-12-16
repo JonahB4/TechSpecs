@@ -48,6 +48,7 @@ class GameManager {
         this.characterStats.wealth += birthdayMoney;
         console.log(`Happy Birthday! You received $${birthdayMoney} for turning ${this.characterStats.age}`);
         this.uiManager.updateGameLog(`Happy Birthday! You received $${birthdayMoney} for turning ${this.characterStats.age}`);
+        this.uiManager.updateEducationAndCareerOptions();
 
         // Education progress
         if (this.education.currentMajor && !this.education.graduated) {
@@ -93,10 +94,7 @@ class GameManager {
         
         this.uiManager.updateRelationshipsDisplay();
         this.uiManager.updatePetsDisplay();
-        // In GameManager.js, add this line in the progressTurn method after updating the UI
-        this.uiManager.updateEducationAndCareerDisplay();
         this.uiManager.updateCareerDisplay();
-        
         
         this.checkDeath();
     }
