@@ -53,7 +53,7 @@ h3 {
     background-color: #f8fafc;
     border-radius: 12px;
     padding: 24px;
-    margin-bottom: 24px;
+    margin-bottom: 16px;
 }
 
 .character-info {
@@ -100,16 +100,17 @@ h3 {
     flex: 1;
 }
 
-.top-section {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-}
-
 .game-controls {
     display: flex;
     justify-content: center;
     gap: 16px;
+    margin-bottom: 24px;
+    padding: 8px;
+}
+
+.game-controls button {
+    flex: 0 1 auto;
+    min-width: 120px;
 }
 
 /* Game log */
@@ -243,6 +244,75 @@ button:disabled {
     
     .action-container {
         grid-template-columns: 1fr;
+    }
+}
+
+/* Event panel */
+.event-panel {
+    flex: 1;
+}
+
+/* Relationship and Pet sections */
+.section {
+    background-color: #f8fafc;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 16px;
+}
+
+.relationship-item,
+.pet-item {
+    background-color: white;
+    padding: 16px;
+    border-radius: 8px;
+    margin-bottom: 12px;
+}
+
+.relationship-info,
+.pet-info {
+    margin-bottom: 12px;
+}
+
+.relationship-actions,
+.pet-actions {
+    display: flex;
+    gap: 8px;
+}
+
+/* Career section */
+.career-info {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.career-actions {
+    margin-top: 16px;
+}
+
+/* Section styles */
+.section {
+    margin-bottom: 24px;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .game-controls {
+        flex-direction: column;
+    }
+    
+    .action-container {
+        grid-template-columns: 1fr;
+    }
+    
+    .relationship-actions,
+    .pet-actions,
+    .career-actions {
+        flex-direction: column;
     }
 }
 .education-career-section {
