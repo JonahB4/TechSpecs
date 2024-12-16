@@ -5,6 +5,7 @@ class GameManager {
         this.uiManager = new UIManager(this);
         this.relationshipManager = new RelationshipManager();
         this.petManager = new PetManager();
+        this.education = new Education();
         this.career = null;
         this.isGameOver = false;
         this.availableActions = 3;
@@ -42,13 +43,33 @@ class GameManager {
         if (this.isGameOver) return;
 
         this.characterStats.age++;
+        
+        const birthdayMoney = this.characterStats.age * 100;
+        this.characterStats.wealth += birthdayMoney;
+        console.log(`Happy Birthday! You received $${birthdayMoney} for turning ${this.characterStats.age}`);
+        this.uiManager.updateGameLog(`Happy Birthday! You received $${birthdayMoney} for turning ${this.characterStats.age}`);
+
+        // Education progress
+        if (this.education.currentMajor && !this.education.graduated) {
+            const graduated = this.education.studyYear();
+            if (graduated) {
+                this.uiManager.updateGameLog(`Congratulations! You graduated with a degree in ${this.education.currentMajor}!`);
+                this.characterStats.intelligence += 15;
+            }
+        }
+
         this.characterStats.adjustForAge();
         
-        // Update career
+        // Update career and apply happiness effects
         if (this.career) {
             const careerUpdate = this.career.yearlyUpdate();
             this.characterStats.wealth += this.career.salary;
-            this.characterStats.happiness += (careerUpdate.satisfaction - 50) / 10;
+            
+            // Apply career happiness effect
+            const careerHappinessEffect = (this.career.happiness - 50) / 10;
+            this.characterStats.happiness += careerHappinessEffect;
+            
+            this.uiManager.updateGameLog(`You earned ${Utils.formatMoney(this.career.salary)} from your job as ${this.career.jobTitle}`);
         }
 
         // Update relationships
@@ -72,7 +93,10 @@ class GameManager {
         
         this.uiManager.updateRelationshipsDisplay();
         this.uiManager.updatePetsDisplay();
+        // In GameManager.js, add this line in the progressTurn method after updating the UI
+        this.uiManager.updateEducationAndCareerDisplay();
         this.uiManager.updateCareerDisplay();
+        
         
         this.checkDeath();
     }
@@ -105,16 +129,45 @@ class GameManager {
     
 
     // Career methods
+    startCollege(major) {
+        if (!Education.majors[major]) return false;
+        
+        const majorInfo = Education.majors[major];
+        
+        if (this.characterStats.intelligence < majorInfo.intelligence_requirement) {
+            this.uiManager.updateGameLog(`Your intelligence is too low to study ${majorInfo.name}`);
+            return false;
+        }
+        
+        if (this.characterStats.wealth < majorInfo.cost) {
+            this.uiManager.updateGameLog(`You cannot afford to study ${majorInfo.name}`);
+            return false;
+        }
+        
+        this.characterStats.wealth -= majorInfo.cost;
+        this.education.startMajor(major);
+        this.uiManager.updateGameLog(`You started studying ${majorInfo.name}`);
+        return true;
+    }
+
     applyForJob(careerKey) {
         const careerConfig = Career.availableCareers[careerKey];
         if (!careerConfig) return false;
 
+        // Check basic requirements
         if (this.characterStats.age < careerConfig.requirements.age || 
             this.characterStats.intelligence < careerConfig.requirements.intelligence) {
             return false;
         }
 
+        // Check education requirements
+        if (careerConfig.requirements.major && 
+            (!this.education.graduated || this.education.currentMajor !== careerConfig.requirements.major)) {
+            return false;
+        }
+
         this.career = new Career(careerConfig);
+        this.uiManager.updateGameLog(`You got a job as ${careerConfig.jobTitle} at ${careerConfig.company}!`);
         return true;
     }
 
@@ -146,14 +199,35 @@ class GameManager {
 
     // Pet methods
     adoptPet(config) {
+        console.log('Attempting to adopt pet:', config);
+        
         const petType = Pet.petTypes[config.type.toUpperCase()];
-        if (!petType || this.characterStats.wealth < petType.cost) {
+        if (!petType) {
+            console.error('Invalid pet type:', config.type);
             return false;
         }
 
-        this.characterStats.wealth -= petType.cost;
-        return this.petManager.addPet(config);
+        if (this.characterStats.wealth < petType.cost) {
+            console.error('Not enough money to adopt pet');
+            return false;
+        }
+
+        try {
+            const newPet = this.petManager.addPet(config);
+            if (newPet) {
+                this.characterStats.wealth -= petType.cost;
+                this.characterStats.happiness += 10; // Happiness boost from new pet
+                this.uiManager.updateGameLog(`You adopted a ${config.type} named ${config.name}!`);
+                this.uiManager.updatePetsDisplay(); // Ensure UI is updated
+                return true;
+            }
+        } catch (error) {
+            console.error('Error adopting pet:', error);
+            return false;
+        }
+        return false;
     }
+
 
     interactWithPet(petName, action) {
         const pet = this.petManager.getPet(petName);
