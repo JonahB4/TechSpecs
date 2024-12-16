@@ -18,7 +18,6 @@ class UIManager {
             console.error('Error initializing UI:', error);
         }
     }
-
     reorganizeLayout() {
         try {
             // Get the game container first
@@ -27,21 +26,10 @@ class UIManager {
                 console.error('Game container not found');
                 return;
             }
-
-            // Store the stats panel and death modal
+    
+            // Store all the necessary elements
             const statsPanel = gameContainer.querySelector('.stats-panel');
             const deathModal = gameContainer.querySelector('#death-modal');
-
-            // Create main content container
-            const mainContent = document.createElement('div');
-            mainContent.className = 'main-content';
-
-            // Create top section for game log
-            const topSection = document.createElement('div');
-            topSection.className = 'top-section';
-
-            // Get existing elements
-            const gameControls = gameContainer.querySelector('.game-controls');
             const eventPanel = gameContainer.querySelector('#event-panel');
             const gameLog = gameContainer.querySelector('#game-log');
 
@@ -66,21 +54,39 @@ class UIManager {
 
             // Clear the game container
             gameContainer.innerHTML = '';
-
-            // Rebuild the structure
+    
+            // Rebuild the structure in the desired order
+            // 1. Stats Panel
             if (statsPanel) gameContainer.appendChild(statsPanel);
-            mainContent.appendChild(topSection);
-            mainContent.appendChild(bottomContent);
+    
+            // 2. Game Controls - now containing both buttons
+            gameContainer.appendChild(newGameControls);
+    
+            // 3. Main Content
+            const mainContent = document.createElement('div');
+            mainContent.className = 'main-content';
+    
+            // 4. Event Panel with Game Log
+            const newEventPanel = document.createElement('div');
+            newEventPanel.id = 'event-panel';
+            newEventPanel.className = 'event-panel';
+            if (gameLog) newEventPanel.appendChild(gameLog);
+            mainContent.appendChild(newEventPanel);
+    
+            // Add main content to container
             gameContainer.appendChild(mainContent);
+    
+            // 5. Death Modal
             if (deathModal) gameContainer.appendChild(deathModal);
-
-            // Re-setup event listeners since we cloned nodes
+    
+            // Re-setup event listeners since we created new buttons
             this.setupEventListeners();
             this.setupActionButtons();
         } catch (error) {
             console.error('Error in reorganizeLayout:', error);
         }
     }
+
 
     setupActionButtons() {
         try {
